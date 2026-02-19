@@ -1,6 +1,7 @@
 using SoapCore;
 //using MockSoapService.Contracts;
 using MockSoapService.Services;
+using ServiceReference;
 
 var builder = WebApplication.CreateBuilder(args);
 

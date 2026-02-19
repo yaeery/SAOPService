@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36915.13 d17.14
+VisualStudioVersion = 17.14.36915.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOAPClientTest", "SOAPClientTest\SOAPClientTest.csproj", "{6CCCBF5B-DB70-465C-8208-8DDA3B4DFEA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOAPClientTestIntegrationTests", "SOAPClientTestUnitTest\SOAPClientTestIntegrationTests.csproj", "{134ABA39-1E8B-4332-8CC6-12A234DBED10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{6CCCBF5B-DB70-465C-8208-8DDA3B4DFEA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CCCBF5B-DB70-465C-8208-8DDA3B4DFEA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CCCBF5B-DB70-465C-8208-8DDA3B4DFEA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{134ABA39-1E8B-4332-8CC6-12A234DBED10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{134ABA39-1E8B-4332-8CC6-12A234DBED10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{134ABA39-1E8B-4332-8CC6-12A234DBED10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{134ABA39-1E8B-4332-8CC6-12A234DBED10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

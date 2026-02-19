@@ -3,36 +3,44 @@ using Microsoft.AspNetCore.Identity.Data;
 using MockSoapService;
 using System.Reflection;
 using System.ServiceModel; // namespace Reference.cs
+using Task = System.Threading.Tasks.Task;
+using ServiceReference;
+using Status = ServiceReference.Status;
 
 namespace MockSoapService.Services
 {
     public class NetSuiteMock : NetSuitePortType
     {
-
-        private readonly string _orderId = "12345";
-
-        public getResponse get(getRequest request)
+        public async Task<getResponse> getAsync(getRequest request)
         {
-            BaseRef requestedRecord = request.@baseRef;
-            if (requestedRecord is RecordRef recordRef)
+        string _orderId = "12345";
+        RecordRef recordRef = (RecordRef)request.@baseRef;
+        BaseRef requestedRecord = request.@baseRef;
+            if (requestedRecord is RecordRef recordRefProm)
             {
-                var id = recordRef.internalId;
-
-                if (id == _orderId)
+                if (recordRef.type == RecordType.salesOrder)
                 {
-                    return CreateSuccessResponseGet(id);
+                    var id = recordRef.internalId;
+
+                    if (id == _orderId)
+                    {
+                        return await Task.FromResult(CreateSuccessResponseGet(id));
+                    }
+                    else
+                    {
+                        return await Task.FromResult(CreateErrorResponseGet($"Order with id {id} not found"));
+                    }
                 }
                 else
                 {
-                    return CreateErrorResponseGet($"Order with id {id} not found");
+                    return await Task.FromResult(CreateErrorResponseGet($"Unsupported recordRef type: {recordRef.type}"));
                 }
             }
             else
             {
-                return CreateErrorResponseGet($"Unsupported baseRef type: {requestedRecord?.GetType()}");
+               return await Task.FromResult(CreateErrorResponseGet($"Unsupported baseRef type: {requestedRecord?.GetType()}"));
             }
         }
-
         private getResponse CreateSuccessResponseGet(string id)
         {
             var salesOrder = new SalesOrder
@@ -302,32 +310,32 @@ namespace MockSoapService.Services
         }
 
 
-        public addListResponse addList(addListRequest request)
+        public async Task<addListResponse> addListAsync(addListRequest request)
         {
             string _shortname = "";
             string _internalId = "";
             var _writeResponses = new List<WriteResponse>();
-            for (int i = 0; i < request.record.Count(); i++)
+            if (!(request.record[0] is State stateList))
             {
-                if (!(request.record[i] is State state))
+                return await Task.FromResult(CreateErrorResponseAddList($"Unsupported record type: {request.record[0].GetType().Name}"));
+            }
+            else
+            {
+                for (int i = 0; i < request.record.Count(); i++)
                 {
-                    return CreateErrorResponseAddList($"Unsupported record type: {request.record[i]?.GetType().Name}");
-                }
-                else
-                {
-                    if (_shortname != state.shortname)
+                    if (_shortname != ((State)request.record[i]).shortname)
                     {
-                        _shortname = state.shortname;
+                        _shortname = ((State)request.record[i]).shortname;
                         _internalId = new Random().Next(10000, 99999).ToString();
-                        _writeResponses.Add(CreateSuccessResponseAddList(state, _internalId));
+                        _writeResponses.Add(CreateSuccessResponseAddList(((State)request.record[i]), _internalId));
                     }
                     else
                     {
-                        _writeResponses.Add(CreateDuplicateResponseAddList(state, _internalId));
+                        _writeResponses.Add(CreateDuplicateResponseAddList(((State)request.record[i]), _internalId));
                     }
                 }
             }
-            return CreateSuccessResponseAddList(_writeResponses);
+            return await Task.FromResult(CreateSuccessResponseAddList(_writeResponses));
 
         }
         private addListResponse CreateSuccessResponseAddList(List<WriteResponse> writeResponses)
@@ -462,7 +470,6 @@ namespace MockSoapService.Services
             };
         }
 
-        
 
         public async Task<updateResponse> updateAsync(updateRequest request)
         {
@@ -605,7 +612,6 @@ namespace MockSoapService.Services
                     };
             }
         }
-
         private updateResponse CreateResponseUpdateSalesOrder(SalesOrder salesOrder)
         {
             if (string.IsNullOrEmpty(salesOrder.internalId))
@@ -748,7 +754,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private updateResponse CreateErrorNullResponseUpdate()
         {
             return new updateResponse
@@ -772,7 +777,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private updateResponse CreateErrorunsupportedResponseUpdate(Record record)
         {
             return new updateResponse
@@ -796,6 +800,8 @@ namespace MockSoapService.Services
                 }
             };
         }
+
+
         public async Task<searchResponse> searchAsync(searchRequest request)
         {
             if (request.searchRecord is CustomRecordSearchBasic stateSearch)
@@ -816,8 +822,6 @@ namespace MockSoapService.Services
                 return await Task.FromResult(CreateErrorResponseSearch(request.searchRecord?.GetType().Name));
             }
         }
-
-
         private List<State> CreateTestStates()
         {
             return new List<State>
@@ -864,7 +868,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private List<Customer> CreateTestCustomers()
         {
             return new List<Customer>
@@ -903,7 +906,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private List<SalesOrder> CreateTestSalesOrders()
         {
             return new List<SalesOrder>
@@ -954,7 +956,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private searchResponse SearchStates(CustomRecordSearchBasic search, List<State> states)
         {
             var filteredStates = states.AsEnumerable();
@@ -1132,7 +1133,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
         private searchResponse CreateErrorResponseSearch(string errorMessage)
         {
             return new searchResponse
@@ -1156,7 +1156,6 @@ namespace MockSoapService.Services
                 }
             };
         }
-
     }
 }
 
