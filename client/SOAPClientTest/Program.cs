@@ -40,7 +40,8 @@ namespace SOAPClientTest
             var recordRef = new RecordRef
             {
                 type = RecordType.salesOrder,
-                internalId = "12345"
+                typeSpecified = true,
+                internalId = "123456"
             };
 
             return await client.getAsync(
@@ -73,19 +74,19 @@ namespace SOAPClientTest
                 country = Country._russianFederation,
                 countrySpecified = true,
             };
-            int x = 0;
+
             return await client.addListAsync(
                 tokenPassport,
                 applicationInfo,
                 partnerInfo,
                 preferences,
-                new Record[] { newState, existingState } 
+                new State[] { newState, existingState } 
             );
         }
 
         async Task<updateResponse> clientUpdateAsync(NetSuitePortTypeClient client, TokenPassport tokenPassport, ApplicationInfo applicationInfo, PartnerInfo partnerInfo, Preferences preferences)
         {
-            var record = CreateRecordForUpdate("state");
+            var record = CreateRecordForUpdate<State>();
             return await client.updateAsync(
                 tokenPassport,
                 applicationInfo,
@@ -94,10 +95,37 @@ namespace SOAPClientTest
                 record
             );
         }
-
-        private Record CreateRecordForUpdate(string type)
+        async Task<searchResponse> clientSearchAsync(NetSuitePortTypeClient client, TokenPassport tokenPassport, ApplicationInfo applicationInfo, PartnerInfo partnerInfo)
         {
-            if (type == "state")
+            var searchPreferences = new SearchPreferences
+            {
+                bodyFieldsOnly = false,
+                returnSearchColumns = true,
+                pageSize = 50,
+                pageSizeSpecified = true
+            };
+            var searchRecord = new CustomerSearchBasic
+            {
+                companyName = new SearchStringField
+                {
+                    @operator = SearchStringFieldOperator.contains,
+                    searchValue = "Ромашка"
+                }
+            };
+
+            return await client.searchAsync(
+                tokenPassport,
+                applicationInfo,
+                partnerInfo,
+                searchPreferences,
+                searchRecord
+            );
+        }
+
+        private Record CreateRecordForUpdate<TRecord>()
+                where TRecord : class
+        {
+            if (typeof(TRecord) == typeof(State))
             {
                 return new State
                 {
@@ -108,7 +136,7 @@ namespace SOAPClientTest
                     countrySpecified = true,
                 };
             }
-            else if (type == "salesOrder")
+            else if (typeof(TRecord) == typeof(SalesOrder))
             {
                 return new SalesOrder
                 {
@@ -242,17 +270,17 @@ namespace SOAPClientTest
                     {
                         replaceAll = true,
                         salesTeam = new SalesOrderSalesTeam[]
-                {
-                    new SalesOrderSalesTeam
-                    {
-                        employee = new RecordRef { internalId = "777", name = "Иванов Иван" },
-                        salesRole = new RecordRef { internalId = "1", name = "Менеджер" },
-                        contribution = 100,
-                        contributionSpecified = true,
-                        isPrimary = true,
-                        isPrimarySpecified = true
-                    }
-                }
+                        {
+                            new SalesOrderSalesTeam
+                            {
+                                employee = new RecordRef { internalId = "777", name = "Иванов Иван" },
+                                salesRole = new RecordRef { internalId = "1", name = "Менеджер" },
+                                contribution = 100,
+                                contributionSpecified = true,
+                                isPrimary = true,
+                                isPrimarySpecified = true
+                            }
+                        }
                     },
 
                     // 13. ПАРТНЕРЫ
@@ -260,15 +288,15 @@ namespace SOAPClientTest
                     {
                         replaceAll = true,
                         partners = new Partners[]
-                {
-                    new Partners
-                    {
-                        partner = new RecordRef { internalId = "888", name = "Партнер ООО" },
-                        partnerRole = new RecordRef { internalId = "2", name = "Посредник" },
-                        contribution = 50,
-                        contributionSpecified = true
-                    }
-                }
+                        {
+                            new Partners
+                            {
+                                partner = new RecordRef { internalId = "888", name = "Партнер ООО" },
+                                partnerRole = new RecordRef { internalId = "2", name = "Посредник" },
+                                contribution = 50,
+                                contributionSpecified = true
+                            }
+                        }
                     },
 
                     // 14. ТОВАРЫ
@@ -276,51 +304,51 @@ namespace SOAPClientTest
                     {
                         replaceAll = true,
                         item = new SalesOrderItem[]
-                {
-                    new SalesOrderItem
-                    {
-                        item = new RecordRef { internalId = "111", name = "Товар 1" },
-                        quantity = 2,
-                        quantitySpecified = true,
-                        amount = 5000.00,
-                        amountSpecified = true,
-                        description = "Описание товара 1",
-                        rate = "2500.00",
-                        line = 1,
-                        lineSpecified = true
-                    },
-                    new SalesOrderItem
-                    {
-                        item = new RecordRef { internalId = "222", name = "Товар 2" },
-                        quantity = 1,
-                        quantitySpecified = true,
-                        amount = 7500.00,
-                        amountSpecified = true,
-                        description = "Описание товара 2",
-                        rate = "7500.00",
-                        line = 2,
-                        lineSpecified = true
-                    }
-                }
+                        {
+                            new SalesOrderItem
+                            {
+                                item = new RecordRef { internalId = "111", name = "Товар 1" },
+                                quantity = 2,
+                                quantitySpecified = true,
+                                amount = 5000.00,
+                                amountSpecified = true,
+                                description = "Описание товара 1",
+                                rate = "2500.00",
+                                line = 1,
+                                lineSpecified = true
+                            },
+                            new SalesOrderItem
+                            {
+                                item = new RecordRef { internalId = "222", name = "Товар 2" },
+                                quantity = 1,
+                                quantitySpecified = true,
+                                amount = 7500.00,
+                                amountSpecified = true,
+                                description = "Описание товара 2",
+                                rate = "7500.00",
+                                line = 2,
+                                lineSpecified = true
+                            }
+                        }
                     },
 
                     // 15. КАСТОМНЫЕ ПОЛЯ (если нужны)
                     customFieldList = new CustomFieldRef[]
-            {
-                new StringCustomFieldRef
-                {
-                    scriptId = "custbody_mytext",
-                    value = "Тестовое значение"
-                },
-                new DoubleCustomFieldRef
-                {
-                    internalId = "123",
-                    value = 999.99
-                }
+                    {
+                        new StringCustomFieldRef
+                        {
+                            scriptId = "custbody_mytext",
+                            value = "Тестовое значение"
+                        },
+                        new DoubleCustomFieldRef
+                        {
+                            internalId = "123",
+                            value = 999.99
+                        }
             }
                 };
             }
-            else if (type == "customer")
+            else if (typeof(TRecord) == typeof(Customer))
             {
                 return new Customer
                 {
@@ -374,9 +402,33 @@ namespace SOAPClientTest
                     balanceSpecified = true
                 };
             }
+            else if(typeof(TRecord) == typeof(Deposit))
+            {
+                return new Deposit
+                {
+                    internalId = "12345",           // ID существующего депозита
+
+                    // Если нужно обновить дату
+                    tranDate = DateTime.Now,
+                    tranDateSpecified = true,
+
+                    // Если нужно обновить счет
+                    account = new RecordRef
+                    {
+                        internalId = "456"
+                    },
+
+                    // Если нужно обновить мемо
+                    memo = "Обновленный комментарий",
+
+                    // Если нужно обновить сумму
+                    total = 60000.00,
+                    totalSpecified = true
+                };
+            }
             else
             {
-                return new State(); //- вызвать ошибку
+                return null;
             }
         }
         static async Task Main(string[] args)
@@ -406,50 +458,12 @@ namespace SOAPClientTest
                 disableMandatoryCustomFieldValidation = false,
             };
 
-
-
-            //var getResponse = await program.clientGetAsync(client, tokenPassport, applicationInfo, partnerInfo, preferences);
-
-            //var addListResponse = await program.clientAddListAsync(client, tokenPassport, applicationInfo, partnerInfo, preferences);
+            var getResponse = await program.clientGetAsync(client, tokenPassport, applicationInfo, partnerInfo, preferences);
+            var addListResponse = await program.clientAddListAsync(client, tokenPassport, applicationInfo, partnerInfo, preferences);
             var UpdateAsyncResponse = await program.clientUpdateAsync(client, tokenPassport, applicationInfo, partnerInfo, preferences);
-
-            // var Response = await program.clientSearchAsync(client, tokenPassport, applicationInfo, partnerInfo);
+            var Response = await program.clientSearchAsync(client, tokenPassport, applicationInfo, partnerInfo);
             int x = 0;
         }
     }
 }
-//async Task<searchResponse> clientSearchAsync(NetSuitePortTypeClient client, TokenPassport tokenPassport, ApplicationInfo applicationInfo, PartnerInfo partnerInfo)
-//        {
-//            var searchPreferences = new SearchPreferences
-//            {
-//                bodyFieldsOnly = false,
-//                returnSearchColumns = true,
-//                pageSize = 50,
-//                pageSizeSpecified = true
-//            };
-//            // 1. Для поиска State
-//            //var searchRecord = new VendorSearchBasic
-//            //{
-//            //    entityId = new SearchStringField
-//            //    {
-//            //        @operator = SearchStringFieldOperator.contains,
-//            //        operatorSpecified = true,
-//            //        searchValue = "тест"
-//            //    }
-//            //};
 
-//            // 2. Для поиска Customer
-
-//            //CustomerSearchBasic searchRecord = new CustomerSearchBasic();
-//            var searchBasic = new AccountSearchBasic();
-//            var searchRecord = new AccountSearch();
-//searchRecord.basic = searchBasic;
-
-//            return await client.searchAsync(
-//                null,
-//                null,
-//                null,
-//                null,
-//                searchRecord
-//            );
-//        }
